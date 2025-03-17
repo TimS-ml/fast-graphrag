@@ -1,10 +1,13 @@
-import os
+# TODO: implement a non HNSW based vector storage
+
 import pickle
 import heapq
-import numpy as np
+import os
+import enum
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import hnswlib
+import numpy as np
 from dataclasses import dataclass, field
 from scipy.sparse import csr_matrix
 
@@ -15,54 +18,84 @@ from fast_graphrag._storage._base import BaseVectorStorage
 from fast_graphrag._storage._vdb_hnswlib import HNSWVectorStorage, HNSWVectorStorageConfig
 
 
-def default_similarity_fn(vec1: np.ndarray, vec2: np.ndarray) -> float:
-    """Default cosine similarity function."""
-    return float(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
+class SimilarityMode(str, enum.Enum):
+    """Modes for similarity/distance."""
+    DEFAULT = "cosine"
+    DOT_PRODUCT = "dot_product"
+    EUCLIDEAN = "euclidean"
+
+
+def similarity(
+    embedding1: List[float],
+    embedding2: List[float],
+    mode: SimilarityMode = SimilarityMode.DEFAULT,
+) -> float:
+    """Get embedding similarity based on different distance metrics."""
+    if mode == SimilarityMode.EUCLIDEAN:
+        # Using -euclidean distance as similarity to achieve same ranking order
+        return -float(np.linalg.norm(np.array(embedding1) - np.array(embedding2)))
+    elif mode == SimilarityMode.DOT_PRODUCT:
+        return float(np.dot(embedding1, embedding2))
+    else:  # Default: cosine similarity
+        product = np.dot(embedding1, embedding2)
+        norm = np.linalg.norm(embedding1) * np.linalg.norm(embedding2)
+        return float(product / norm) if norm != 0 else 0.0
 
 
 def get_top_k_embeddings(
-    query_embedding: np.ndarray,
-    embeddings: np.ndarray,
-    similarity_fn: Optional[Callable[..., float]] = None,
+    query_embedding: List[float],
+    embeddings: List[float],
+    similarity_fn: Optional[Callable[[List[float], List[float]], float]] = None,
     similarity_top_k: Optional[int] = None,
-    embedding_ids: Optional[List] = None,
+    embedding_ids: Optional[List[int]] = None,
     similarity_cutoff: Optional[float] = None,
-) -> Tuple[List[float], List]:
+    similarity_mode: SimilarityMode = SimilarityMode.DEFAULT,
+) -> Tuple[List[float], List[int]]:
     """Get top nodes by similarity to the query."""
     if embedding_ids is None:
         embedding_ids = list(range(len(embeddings)))
-
-    similarity_fn = similarity_fn or default_similarity_fn
+    
+    # Use provided similarity function or default to similarity with specified mode
+    similarity_fn = similarity_fn or (lambda x, y: similarity(x, y, mode=similarity_mode))
 
     similarity_heap: List[Tuple[float, Any]] = []
     for i, emb in enumerate(embeddings):
-        similarity = similarity_fn(query_embedding, emb)
-        if similarity_cutoff is None or similarity > similarity_cutoff:
-            heapq.heappush(similarity_heap, (similarity, embedding_ids[i]))
+        sim_score = similarity_fn(query_embedding, emb)
+        if similarity_cutoff is None or sim_score > similarity_cutoff:
+            heapq.heappush(similarity_heap, (sim_score, embedding_ids[i]))
             if similarity_top_k and len(similarity_heap) > similarity_top_k:
                 heapq.heappop(similarity_heap)
+    
+    # Sort results by similarity (highest first)
     result_tups = sorted(similarity_heap, key=lambda x: x[0], reverse=True)
-
+    
     result_similarities = [s for s, _ in result_tups]
     result_ids = [n for _, n in result_tups]
-
+    
     return result_similarities, result_ids
 
 
+def mean_agg(embeddings: List[List[float]]) -> List[float]:
+    """Mean aggregation for embeddings."""
+    return np.array(embeddings).mean(axis=0)
+
+
 def get_top_k_mmr_embeddings(
-    query_embedding: np.ndarray,
-    embeddings: np.ndarray,
+    query_embedding: List[float],
+    embeddings: List[float],
     similarity_top_k: Optional[int] = None,
-    embedding_ids: Optional[List] = None,
+    embedding_ids: Optional[List[int]] = None,
     mmr_threshold: Optional[float] = None,
-    similarity_fn: Optional[Callable[..., float]] = None,
+    similarity_fn: Optional[Callable[[List[float], List[float]], float]] = None,
     lambda_mult: float = 0.5,
-) -> Tuple[List[float], List]:
+    similarity_mode: SimilarityMode = SimilarityMode.DEFAULT,
+) -> Tuple[List[float], List[int]]:
     """Get nodes by maximal marginal relevance to the query."""
     if embedding_ids is None:
         embedding_ids = list(range(len(embeddings)))
-
-    similarity_fn = similarity_fn or default_similarity_fn
+    
+    # Use provided similarity function or default to similarity with specified mode
+    similarity_fn = similarity_fn or (lambda x, y: similarity(x, y, mode=similarity_mode))
 
     # Calculate similarity for all embeddings
     similarity_list = [
@@ -138,6 +171,7 @@ class ImprovedHNSWVectorStorageConfig(HNSWVectorStorageConfig):
     default_query_mode: str = field(default="default")  # 'default', 'mmr'
     lambda_mult: float = field(default=0.5)  # Lambda multiplier for MMR
     mmr_threshold: Optional[float] = field(default=None)
+    similarity_mode: SimilarityMode = field(default=SimilarityMode.DEFAULT)
 
 
 @dataclass
@@ -147,8 +181,8 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
     config: ImprovedHNSWVectorStorageConfig = field(default_factory=ImprovedHNSWVectorStorageConfig)
     
     async def get_knn(
-        self, embeddings: Iterable[GTEmbedding], top_k: int, mode: str = None
-    ) -> Tuple[Iterable[Iterable[GTId]], np.ndarray]:
+        self, embeddings: Iterable[GTEmbedding], top_k: int, mode: Optional[str] = None 
+    ) -> Tuple[Iterable[Iterable[GTId]], List[float]]:
         """Get K nearest neighbors with support for different retrieval methods."""
         if self.size == 0:
             empty_list: List[List[GTId]] = []
@@ -162,8 +196,9 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
         mode = mode or self.config.default_query_mode
         
         # Convert embeddings to numpy array if it's not already
-        if not isinstance(embeddings, np.ndarray):
-            embeddings = np.array(list(embeddings), dtype=np.float32)
+        embeddings_array = np.asarray(embeddings, dtype=np.float32)
+        if len(embeddings_array.shape) == 1:
+            embeddings_array = embeddings_array.reshape(1, -1)
             
         # Retrieve all embeddings for advanced methods
         if mode == 'mmr':
@@ -174,7 +209,7 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
             
             # First get candidate embeddings using standard HNSW search
             ids, distances = self._index.knn_query(
-                data=embeddings, 
+                data=embeddings_array, 
                 k=candidate_count, 
                 num_threads=self.config.num_threads
             )
@@ -182,7 +217,7 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
             all_result_similarities = []
             all_result_ids = []
             
-            for i, query_emb in enumerate(embeddings):
+            for i, query_emb in enumerate(embeddings_array):
                 # Get the candidate embeddings for this query
                 candidate_indices = ids[i]
                 candidate_embs = np.array([
@@ -196,7 +231,8 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
                     similarity_top_k=top_k,
                     embedding_ids=candidate_indices.tolist(),
                     mmr_threshold=self.config.mmr_threshold,
-                    lambda_mult=self.config.lambda_mult
+                    lambda_mult=self.config.lambda_mult,
+                    similarity_mode=self.config.similarity_mode
                 )
                 
                 all_result_similarities.append(result_similarities)
@@ -206,7 +242,7 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
         else:
             # Default HNSW retrieval
             ids, distances = self._index.knn_query(
-                data=embeddings, 
+                data=embeddings_array, 
                 k=top_k, 
                 num_threads=self.config.num_threads
             )
@@ -214,10 +250,10 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
             
     async def score_all(
         self, embeddings: Iterable[GTEmbedding], top_k: int = 1, threshold: Optional[float] = None, 
-        mode: str = None
+        mode: Optional[str] = None
     ) -> csr_matrix:
         """Score all embeddings with support for different retrieval methods."""
-        if not isinstance(embeddings, np.ndarray):
+        if not isinstance(embeddings, List[float]):
             embeddings = np.array(list(embeddings), dtype=np.float32)
 
         if embeddings.size == 0 or self.size == 0:
@@ -261,7 +297,8 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
                     similarity_top_k=top_k,
                     embedding_ids=candidate_indices.tolist(),
                     mmr_threshold=self.config.mmr_threshold,
-                    lambda_mult=self.config.lambda_mult
+                    lambda_mult=self.config.lambda_mult,
+                    similarity_mode=self.config.similarity_mode
                 )
                 
                 # Update the sparse matrix
@@ -270,26 +307,27 @@ class ImprovedHNSWVectorStorage(HNSWVectorStorage):
             
             return result_matrix
         else:
-            # Default HNSW retrieval
-            ids, distances = self._index.knn_query(
-                data=embeddings, 
-                k=top_k, 
-                num_threads=self.config.num_threads
-            )
-
-            ids = np.array(ids)
-            scores = 1.0 - np.array(distances, dtype=TScore) * 0.5
-
-            if threshold is not None:
-                scores[scores < threshold] = 0
-
-            # Create sparse distance matrix with shape (#embeddings, #all_embeddings)
-            flattened_ids = ids.ravel()
-            flattened_scores = scores.ravel()
-
-            scores = csr_matrix(
-                (flattened_scores, (np.repeat(np.arange(len(ids)), top_k), flattened_ids)),
-                shape=(len(ids), self.size),
-            )
-
-            return scores
+            # Use custom similarity calculation instead of HNSW's default
+            all_embeddings = np.array([
+                self._index.get_items([i])[0] for i in range(self.size)
+            ])
+            
+            # Create sparse matrix to hold results
+            num_queries = len(embeddings)
+            result_matrix = csr_matrix((num_queries, self.size), dtype=np.float32)
+            
+            for i, query_emb in enumerate(embeddings):
+                # Use our custom get_top_k_embeddings function
+                similarities, result_indices = get_top_k_embeddings(
+                    query_embedding=query_emb,
+                    embeddings=all_embeddings,
+                    similarity_top_k=top_k,
+                    similarity_cutoff=threshold,
+                    similarity_mode=self.config.similarity_mode
+                )
+                
+                # Update the sparse matrix
+                for similarity, idx in zip(similarities, result_indices):
+                    result_matrix[i, idx] = similarity
+            
+            return result_matrix

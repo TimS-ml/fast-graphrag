@@ -11,8 +11,8 @@
 DEBUG=2
 # SCRIPT_NAME=vdb_debug.py
 SCRIPT_NAME=vdb_benchmark_v2.py
-# N=2
-N=51
+N=2
+# N=51
 
 echo -e "\n\n++++++++++++++++++++Creating databases++++++++++++++++++++"
 DEBUG=$DEBUG python $SCRIPT_NAME -n $N -c -d 2wikimultihopqa
