@@ -1,11 +1,11 @@
-"""Improved benchmark for vectordb-based RAG."""
+"""Everything necessary to run a deo with a vdb storage."""
 
 import argparse
 import asyncio
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Dict, Iterable, List, Tuple, Optional
+from typing import Any, Awaitable, Dict, Iterable, List, Tuple
 
 import numpy as np
 import xxhash
@@ -17,10 +17,8 @@ from fast_graphrag._models import TAnswer
 from fast_graphrag._storage._base import BaseStorage
 from fast_graphrag._storage._ikv_pickle import PickleIndexedKeyValueStorage
 from fast_graphrag._storage._namespace import Workspace
+from fast_graphrag._storage._vdb_bruteforce import BruteForceVectorStorage, BruteForceVectorStorageConfig
 from fast_graphrag._utils import get_event_loop
-
-from fast_graphrag._storage._vdb_hnswlib_v2 import ImprovedHNSWVectorStorage, ImprovedHNSWVectorStorageConfig
-# from fast_graphrag._storage._vdb_hnswlib import HNSWVectorStorage, HNSWVectorStorageConfig
 
 from boring_utils.utils import cprint, tprint
 from boring_utils.helpers import DEBUG
@@ -35,54 +33,75 @@ async def format_and_send_prompt(
     """Get a prompt, format it with the supplied args, and send it to the LLM."""
     # Format the prompt with the supplied arguments
     formatted_prompt = prompt.format(**format_kwargs)
+    cprint(formatted_prompt)
 
     # Send the formatted prompt to the LLM
     response, rest = await llm.send_message(prompt=formatted_prompt, response_model=TAnswer, **args)
+    cprint(response)
+    cprint(rest)
     return response.answer, rest
 
 
 def dump_to_reference_list(data: Iterable[object], separator: str = "\n=====\n\n"):
     """Convert list of chunks to a string."""
-    return separator.join([f"[{i + 1}]  {d}" for i, d in enumerate(data)])
+    result = separator.join([f"[{i + 1}]  {d}" for i, d in enumerate(data)])
+    cprint(result)
+    return result
 
 
-class ImprovedVectorStorage:
-    """Vector storage with improved HNSW."""
+class VectorStorage:
+    """Vector storage with HNSW."""
 
-    def __init__(self, workspace: Workspace, retrieval_mode: str = "default"):
-        """Create vector storage with improved HNSW."""
+    def __init__(self, workspace: Workspace):
+        """Create vector storage with HNSW."""
         self.workspace = workspace
-        self.vdb = ImprovedHNSWVectorStorage(
-            config=ImprovedHNSWVectorStorageConfig(
-                ef_construction=96, 
-                ef_search=48,
-                default_query_mode=retrieval_mode,
-                lambda_mult=0.6,  # Higher value prioritizes relevance over diversity
-                mmr_threshold=0.6  # Minimum similarity threshold for MMR
+        self.vdb = BruteForceVectorStorage[int, Any](
+            config=BruteForceVectorStorageConfig(
+                num_threads=-1,  # Kept for API compatibility
+                similarity_cutoff=0.0  # You can adjust this threshold if needed
             ),
             namespace=workspace.make_for("vdb"),
             embedding_dim=1536,
         )
         self.embedder = OpenAIEmbeddingService()
         self.ikv = PickleIndexedKeyValueStorage[int, Any](config=None, namespace=workspace.make_for("ikv"))
+        if DEBUG > 2:
+            tprint("Init Vector storage with HNSW.", sep="-")
+            cprint(self.workspace)
+            cprint(self.vdb)
+            cprint(self.embedder)
+            cprint(self.ikv)
 
     async def upsert(self, ids: Iterable[int], data: Iterable[Tuple[str, str]]) -> None:
         """Add or update embeddings in the storage."""
+        tprint("Add or update embeddings in the storage.", sep="-")
+
         data = list(data)
         ids = list(ids)
-        embeddings = await self.embedder.encode([f"{t}\n\n{c}" for t, c in data])
+        texts = [f"{t}\n\n{c}" for t, c in data]
+        embeddings = await self.embedder.encode(texts)
+        cprint(embeddings.shape)
+        
         await self.ikv.upsert([int(i) for i in ids], data)
         await self.vdb.upsert(ids, embeddings)
 
-    async def get_context(self, query: str, top_k: int, retrieval_mode: Optional[str] = None) -> List[Tuple[str, str]]:
+    async def get_context(self, query: str, top_k: int) -> List[Tuple[str, str]]:
         """Get the most similar embeddings to the query."""
+        tprint("Get the most similar embeddings to the query.", sep="-")
+        
         embedding = await self.embedder.encode([query])
-        ids, _ = await self.vdb.get_knn(embedding, top_k, mode=retrieval_mode)
+        ids, scores = await self.vdb.get_knn(embedding, top_k)  # NOTE: this is important
+        cprint(ids, scores, new_line=True)
 
-        return [c for c in await self.ikv.get([int(i) for i in np.array(ids).flatten()]) if c is not None]
+        cprint('converting ids to int...', c='gray')
+        results = [c for c in await self.ikv.get([int(i) for i in np.array(ids).flatten()]) if c is not None]
+        cprint(results, new_line=True)
+        cprint(len(results))
+        return results
 
     async def query_start(self):
         """Load the storage for querying."""
+        tprint("Load the storage for querying.", sep="-")
         storages: List[BaseStorage] = [self.ikv, self.vdb]
 
         def _fn():
@@ -98,6 +117,7 @@ class ImprovedVectorStorage:
 
     async def query_done(self):
         """Finish querying the storage."""
+        tprint("Finish querying the storage.", sep="-")
         tasks: List[Awaitable[Any]] = []
         storages: List[BaseStorage] = [self.ikv, self.vdb]
         for storage_inst in storages:
@@ -109,6 +129,7 @@ class ImprovedVectorStorage:
 
     async def insert_start(self):
         """Prepare the storage for inserting."""
+        tprint("Starting insert", sep="-")
         storages: List[BaseStorage] = [self.ikv, self.vdb]
 
         def _fn():
@@ -124,6 +145,7 @@ class ImprovedVectorStorage:
 
     async def insert_done(self):
         """Finish inserting into the storage."""
+        tprint("Finishing insert", sep="-")
         tasks: List[Awaitable[Any]] = []
         storages: List[BaseStorage] = [self.ikv, self.vdb]
         for storage_inst in storages:
@@ -160,41 +182,69 @@ class LLMService:
     def __init__(self):
         """Create the LLM service."""
         self.llm = OpenAILLMService()
+        cprint(self.llm)
 
     async def ask_query(self, context: str, query: str) -> str:
         """Ask a query to the LLM."""
-        return (
-            await format_and_send_prompt(
-                prompt=self.PROMPT, llm=self.llm, format_kwargs={"context": context, "query": query}
-            )
-        )[0]
+        cprint(context)
+        cprint(query)
+        
+        response, history = await format_and_send_prompt(
+            prompt=self.PROMPT, 
+            llm=self.llm, 
+            format_kwargs={"context": context, "query": query}
+        )
+        cprint(response)
+        cprint(history)
+        return response
 
 
-async def upsert_to_vdb(data: List[Tuple[str, str]], working_dir: str = "./", retrieval_mode: str = "default"):
-    """Upsert data to the improved vector storage."""
+async def upsert_to_vdb(data: List[Tuple[str, str]], working_dir: str = "./"):
+    """Upsert data to the vector storage."""
+    tprint("Upsert data to the vector storage.")
+    cprint(len(data))
+    
     workspace = Workspace(working_dir)
-    storage = ImprovedVectorStorage(workspace, retrieval_mode=retrieval_mode)
+    storage = VectorStorage(workspace)
+    
     await storage.insert_start()
-    await storage.upsert([xxhash.xxh64(corpus).intdigest() for _, (title, corpus) in data], [(title, corpus) for _, (title, corpus) in data])
+    
+    ids = [xxhash.xxh64(corpus).intdigest() for _, (title, corpus) in data]
+    cprint(ids[:3], new_line=True)
+    
+    pair_data = [(title, corpus) for _, (title, corpus) in data]
+    cprint(pair_data[:2], new_line=True)
+    
+    await storage.upsert(ids, pair_data)
     await storage.insert_done()
 
 
-async def query_from_vdb(query: str, top_k: int, working_dir: str = "./", only_context: bool = True, retrieval_mode: Optional[str] = None) -> str:
-    """Query the improved vector storage."""
+async def query_from_vdb(query: str, top_k: int, working_dir: str = "./", only_context: bool = True) -> str:
+    """Query the vector storage."""
+    tprint("Query the vector storage.", sep="-")
+    cprint(query, top_k, only_context, c='red')
+    
     workspace = Workspace(working_dir)
-    storage = ImprovedVectorStorage(workspace)
+    storage = VectorStorage(workspace)
+    
     await storage.query_start()
-    chunks = await storage.get_context(query, top_k, retrieval_mode=retrieval_mode)
+    chunks = await storage.get_context(query, top_k)
     await storage.query_done()
 
     if only_context:
-        answer = ""
+        llm_answer = ""
     else:
         llm = LLMService()
-        answer = await llm.ask_query(dump_to_reference_list([content for _, content in chunks]), query)
+        cprint(llm)
+        chunk_text = dump_to_reference_list([content for _, content in chunks])
+        cprint(chunk_text)
+        llm_answer = await llm.ask_query(chunk_text, query)
+        cprint(llm_answer)
+    
     context = "=====".join([title + ":=" + content for title, content in chunks])
-
-    return answer + "`````" + context
+    result = llm_answer + "`````" + context
+    cprint(result, new_line=True)
+    return result
 
 
 @dataclass
@@ -208,8 +258,11 @@ class Query:
 
 def load_dataset(dataset_name: str, subset: int = 0) -> Any:
     """Load a dataset from the datasets folder."""
+    cprint(dataset_name, subset)
+    
     with open(f"./datasets/{dataset_name}.json", "r") as f:
         dataset = json.load(f)
+    # cprint(len(dataset))
 
     if subset:
         return dataset[:subset]
@@ -233,6 +286,7 @@ def get_corpus(dataset: Any, dataset_name: str) -> Dict[int, Tuple[int | str, st
                 if hash_t not in passages:
                     passages[hash_t] = (title, text)
 
+        cprint(len(passages))
         return passages
     else:
         raise NotImplementedError(f"Dataset {dataset_name} not supported.")
@@ -243,39 +297,38 @@ def get_queries(dataset: Any):
     queries: List[Query] = []
 
     for datapoint in dataset:
-        queries.append(
-            Query(
-                question=datapoint["question"].encode("utf-8").decode(),
-                answer=datapoint["answer"],
-                evidence=list(datapoint["supporting_facts"]),
-            )
+        query = Query(
+            question=datapoint["question"].encode("utf-8").decode(),
+            answer=datapoint["answer"],
+            evidence=list(datapoint["supporting_facts"]),
         )
+        queries.append(query)
 
+    cprint(len(queries))
     return queries
 
 
 if __name__ == "__main__":
     load_dotenv()
 
-    parser = argparse.ArgumentParser(description="Improved VectorDB CLI")
+    parser = argparse.ArgumentParser(description="GraphRAG CLI")
     parser.add_argument("-d", "--dataset", default="2wikimultihopqa", help="Dataset to use.")
     parser.add_argument("-n", type=int, default=0, help="Subset of corpus to use.")
-    parser.add_argument("-c", "--create", action="store_true", help="Create the vector store for the given dataset.")
-    parser.add_argument("-b", "--benchmark", action="store_true", help="Benchmark the vector store for the given dataset.")
+    parser.add_argument("-c", "--create", action="store_true", help="Create the graph for the given dataset.")
+    parser.add_argument("-b", "--benchmark", action="store_true", help="Benchmark the graph for the given dataset.")
     parser.add_argument("-s", "--score", action="store_true", help="Report scores after benchmarking.")
-    parser.add_argument("--mode", default="default", choices=["default", "mmr"], help="Retrieval mode.")
     args = parser.parse_args()
 
     print("Loading dataset...")
     dataset = load_dataset(args.dataset, subset=args.n)
-    working_dir = f"./db/improved_vdb/{args.dataset}_{args.n}_{args.mode}"
+    working_dir = f"./db/vdb_bf/{args.dataset}_{args.n}"
     corpus = get_corpus(dataset, args.dataset)
 
     if args.create:
-        print(f"Dataset loaded. Corpus: {len(corpus)}")
+        print("Dataset loaded. Corpus:", len(corpus))
 
         async def _run_create():
-            await upsert_to_vdb(list(corpus.items()), working_dir, retrieval_mode=args.mode)
+            await upsert_to_vdb(list(corpus.items()), working_dir)
 
         get_event_loop().run_until_complete(_run_create())
 
@@ -283,7 +336,7 @@ if __name__ == "__main__":
         queries = get_queries(dataset)
 
         async def _query_task(query: Query) -> Tuple[Query, str]:
-            return query, await query_from_vdb(query.question, 8, working_dir, retrieval_mode=args.mode)
+            return query, await query_from_vdb(query.question, 8, working_dir)
 
         async def _run_benchmark():
             answers = [await _query_task(query) for query in tqdm(queries)]
@@ -292,10 +345,11 @@ if __name__ == "__main__":
         answers = get_event_loop().run_until_complete(_run_benchmark())
         response: List[Dict[str, Any]] = []
 
-        with open(f"./results/improved_vdb/{args.dataset}_{args.n}_{args.mode}.json", "w") as f:
+        with open(f"./results/vdb_bf/{args.dataset}_{args.n}.json", "w") as f:
             for r in answers:
                 question, answer = r
                 a, c = answer.split("`````")
+                cprint(c, new_line=True, c='red')
                 chunks = c.split("=====")
                 chunks = dict([chunk.split(":=") for chunk in chunks])
                 response.append(
@@ -309,7 +363,7 @@ if __name__ == "__main__":
             json.dump(response, f, indent=4)
 
     if args.benchmark or args.score:
-        with open(f"./results/improved_vdb/{args.dataset}_{args.n}_{args.mode}.json", "r") as f:
+        with open(f"./results/vdb_bf/{args.dataset}_{args.n}.json", "r") as f:
             answers = json.load(f)
 
         try:
@@ -332,9 +386,10 @@ if __name__ == "__main__":
             if answer["question"] in questions_multihop:
                 retrieval_scores_multihop.append(p_retrieved)
 
-        perfect_retrieval = np.mean([1 if s == 1.0 else 0 for s in retrieval_scores])
-        cprint(f"Percentage of queries with perfect retrieval: {perfect_retrieval}", c='red')
-        
+        print(
+            f"Percentage of queries with perfect retrieval: {np.mean([1 if s == 1.0 else 0 for s in retrieval_scores])}"
+        )
         if len(retrieval_scores_multihop):
-            multihop_perfect_retrieval = np.mean([1 if s == 1.0 else 0 for s in retrieval_scores_multihop])
-            cprint(f"[multihop] Percentage of queries with perfect retrieval: {multihop_perfect_retrieval}", c='red')
+            print(
+                f"[multihop] Percentage of queries with perfect retrieval: {np.mean([1 if s == 1.0 else 0 for s in retrieval_scores_multihop])}"
+            )

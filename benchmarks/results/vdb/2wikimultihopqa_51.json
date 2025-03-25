@@ -9,7 +9,9 @@
             "Adolf I of Lotharingia",
             "Ermengarde of Tours",
             "Otto I, Count of Burgundy",
-            "Lambert, Margrave of Tuscany"
+            "Lambert, Margrave of Tuscany",
+            "Joan II, Countess of Burgundy",
+            "Beatrice I, Countess of Burgundy"
         ],
         "question": "When did Lothair Ii's mother die?",
         "ground_truth": [
@@ -27,7 +29,9 @@
             "It's a Wonderful Afterlife",
             "Gurinder Chadha",
             "Kabani Nadi Chuvannappol",
-            "Algiers (film)"
+            "Algiers (film)",
+            "Lloyd (film)",
+            "45 Fathers"
         ],
         "question": "Which film was released first, Aas Ka Panchhi or Phoolwari?",
         "ground_truth": [
@@ -45,7 +49,9 @@
             "Joseph J. Sullivan (vaudeville)",
             "Corey Snide",
             "Donnie Elbert",
-            "When the Stars Go Blue"
+            "When the Stars Go Blue",
+            "Me and Bobby McGee",
+            "Place of origin"
         ],
         "question": "What is the place of birth of the performer of song Changed It?",
         "ground_truth": [
@@ -63,7 +69,9 @@
             "Shima (film)",
             "Hassan Zee",
             "Jawty",
-            "Motherland (disambiguation)"
+            "Motherland (disambiguation)",
+            "Mohammad Ilyas (cricketer)",
+            "Lubnowy"
         ],
         "question": "Are Marufabad and Nasamkhrali both located in the same country?",
         "ground_truth": [
@@ -81,7 +89,9 @@
             "It's a Wonderful Afterlife",
             "Gurinder Chadha",
             "Lina Wertm\u00fcller",
-            "The Hairdresser"
+            "The Hairdresser",
+            "Dying God",
+            "Bombay Dreams (film)"
         ],
         "question": "Which film has the director who is older, God'S Gift To Women or Aldri Annet Enn Br\u00e5k?",
         "ground_truth": [
@@ -101,7 +111,9 @@
             "The Fabulous Senorita",
             "Naked Tango",
             "John Korty",
-            "Michael Curtiz"
+            "Michael Curtiz",
+            "Luis Otero (actor)",
+            "The Heart of Maryland (1921 film)"
         ],
         "question": "Which film whose director was born first, El Tonto or The Heart Of Doreon?",
         "ground_truth": [
@@ -121,7 +133,9 @@
             "W. Augustus Barratt",
             "Andrew Upton",
             "Olav Aaraas",
-            "James Armour (Master mason)"
+            "James Armour (Master mason)",
+            "John McMahon (Surrey and Somerset cricketer)",
+            "John Allen (Oxford University cricketer)"
         ],
         "question": "Who was born first out of Aivar Kuusmaa and Andy Summers?",
         "ground_truth": [
@@ -139,7 +153,9 @@
             "Mugain",
             "D\u00e1ith\u00ed Sproule",
             "Doria Ragland",
-            "James Armour (Master mason)"
+            "James Armour (Master mason)",
+            "Edwin Richards (field hockey)",
+            "Bill Dundee"
         ],
         "question": "Who is Raghnall Mac Ruaidhr\u00ed's paternal grandfather?",
         "ground_truth": [
@@ -157,7 +173,9 @@
             "Perry Bhandal",
             "Michael Curtiz",
             "Ian Barry (director)",
-            "The Blue Collar Worker and the Hairdresser in a Whirl of Sex and Politics"
+            "John Korty",
+            "South of the Clouds (2004 film)",
+            "Alex Cox"
         ],
         "question": "Do both films Interview With A Hitman and The Last Coupon have the directors from the same country?",
         "ground_truth": [
@@ -177,7 +195,9 @@
             "Dark River (2017 film)",
             "Charles Leavitt",
             "Interview with a Hitman",
-            "Dark River (1990 film)"
+            "Dark River (1990 film)",
+            "Robert Florey",
+            "James Tinling"
         ],
         "question": "What nationality is the director of film Blood Street?",
         "ground_truth": [
@@ -195,7 +215,9 @@
             "It's a Wonderful Afterlife",
             "Gurinder Chadha",
             "Goldy Notay",
-            "Life Is What You Make It (film)"
+            "Life Is What You Make It (film)",
+            "Georges Lautner",
+            "Mommy Is at the Hairdresser's"
         ],
         "question": "What is the place of birth of the director of film Gaby: A True Story?",
         "ground_truth": [
@@ -213,7 +235,9 @@
             "Fairbank Island (Michigan)",
             "Sula Island",
             "Pritzerbe Ferry",
-            "Ingmars\u00f6"
+            "Ingmars\u00f6",
+            "Vadim Vlasov",
+            "Goat Island (Tarrant County, Texas)"
         ],
         "question": "Are Vasilyevsky Island and Preobrazheniya Island located in the same country?",
         "ground_truth": [
@@ -230,8 +254,10 @@
             "Billy Milano",
             "Roger Miller",
             "Me and Bobby McGee",
-            "Ven a bailar conmigo",
-            "Panda (Astro song)"
+            "Panda (Astro song)",
+            "Jack Lee (musician)",
+            "Ryan Adams",
+            "Kristian Leontiou"
         ],
         "question": "What nationality is the performer of song When The Stars Go Blue?",
         "ground_truth": [
@@ -249,7 +275,9 @@
             "Jim Bob",
             "Janis Joplin",
             "When the Stars Go Blue",
-            "Bill Dundee"
+            "Bill Dundee",
+            "TK McKamy",
+            "Andrew Allen (singer)"
         ],
         "question": "Who is the child of the performer of song Me And Bobby Mcgee?",
         "ground_truth": [
@@ -267,7 +295,9 @@
             "Adolf of Nassau (1540\u20131568)",
             "Philip IV, Count of Nassau-Weilburg",
             "Baroness G\u00f6sta von dem Bussche-Haddenhausen",
-            "Matilda II, Countess of Nevers"
+            "Matilda II, Countess of Nevers",
+            "Otto I, Count of Nassau",
+            "Walram II, Count of Nassau"
         ],
         "question": "Where was the place of death of Maurice, Prince Of Orange's father?",
         "ground_truth": [
@@ -285,7 +315,9 @@
             "Coulson Wallop",
             "Ludwig von Westphalen",
             "Adolf I of Lotharingia",
-            "John Adams (merchant)"
+            "John Adams (merchant)",
+            "Lyon Cohen",
+            "Alexander Fuks"
         ],
         "question": "Which country Aleksander Koniecpolski (1620\u20131659)'s father is from?",
         "ground_truth": [
@@ -298,12 +330,14 @@
         "evidence": [
             "Madame la Presidente",
             "Georges Lautner",
-            "Julie Dash",
             "Robert Florey",
             "The Fabulous Senorita",
             "\u00c9douard Niermans (director)",
             "Alberto De Martino",
-            "Lina Wertm\u00fcller"
+            "Lina Wertm\u00fcller",
+            "Algiers (film)",
+            "David Bradley (director)",
+            "Robert A. Stemmle"
         ],
         "question": "What is the date of death of the director of film Madame La Presidente?",
         "ground_truth": [
@@ -321,7 +355,9 @@
             "Wrong Turn 3: Left for Dead",
             "Wrong Turn: The Foundation",
             "Wrong Turn 4: Bloody Beginnings",
-            "Declan O'Brien"
+            "Declan O'Brien",
+            "Blood Street",
+            "Jim Wynorski"
         ],
         "question": "Do both directors of films Wrong Turn 5: Bloodlines and Dark River (2017 Film) have the same nationality?",
         "ground_truth": [
@@ -341,7 +377,9 @@
             "Ky\u014den Kobanzame",
             "South of the Clouds (2004 film)",
             "Dark River (2017 film)",
-            "Dying God"
+            "Dying God",
+            "The Private Life of Helen of Troy",
+            "Michael Curtiz"
         ],
         "question": "Which film has the director who died first, The Goose Woman or You Can No Longer Remain Silent?",
         "ground_truth": [
@@ -361,7 +399,9 @@
             "The Private Life of Helen of Troy",
             "The Private Life of Louis XIV",
             "Robert Florey",
-            "David Bradley (director)"
+            "\u00c9douard Niermans (director)",
+            "Frank Lloyd",
+            "Luis Mandoki"
         ],
         "question": "Where was the director of film The Private Life Of Cinema born?",
         "ground_truth": [
@@ -379,7 +419,9 @@
             "Frank Lloyd",
             "Theodore Salisbury Woolsey Jr.",
             "J. W. N. Sullivan",
-            "Theodore Dwight Woolsey"
+            "Theodore Dwight Woolsey",
+            "Sven Ulric Palme",
+            "James A. Kowalski"
         ],
         "question": "Where did Coulson Wallop's father study?",
         "ground_truth": [
@@ -397,7 +439,9 @@
             "Anne Estelle Rice",
             "Morley Roberts",
             "John Middleton (footballer, born 1955)",
-            "James Randall Marsh"
+            "James Randall Marsh",
+            "Stan Rice",
+            "Maria Thins"
         ],
         "question": "Why did John Middleton Murry's wife die?",
         "ground_truth": [
@@ -415,7 +459,9 @@
             "James Lomas (actor)",
             "Jonny Greenwood",
             "Elliot Silverstein",
-            "Luke Elliot"
+            "Luke Elliot",
+            "Stephen Warbeck",
+            "Billy Milano"
         ],
         "question": "Where was the composer of film Billy Elliot born?",
         "ground_truth": [
@@ -433,7 +479,9 @@
             "Karin Palme",
             "Edith Carlmar",
             "Gabriele Palme",
-            "Holm J\u00f8lsen"
+            "Holm J\u00f8lsen",
+            "Barthold A. Butensch\u00f8n Sr.",
+            "Ludwig von Westphalen"
         ],
         "question": "What is the place of birth of Lisbeth Palme's husband?",
         "ground_truth": [
@@ -451,7 +499,9 @@
             "God's Gift to Women",
             "The Heart of Doreon",
             "Alberto De Martino",
-            "Coney Island Baby (film)"
+            "Coney Island Baby (film)",
+            "Swamp Thing (film)",
+            "Dick Durock"
         ],
         "question": "Which film came out first, 3 Dots or Dying God?",
         "ground_truth": [
@@ -469,7 +519,9 @@
             "Coulson Wallop",
             "Aleksander Koniecpolski (1555\u20131609)",
             "Kaya Alp",
-            "Theodore Salisbury Woolsey"
+            "Theodore Salisbury Woolsey",
+            "Baroness G\u00f6sta von dem Bussche-Haddenhausen",
+            "Lyon Cohen"
         ],
         "question": "Who is the father-in-law of Sisowath Kossamak?",
         "ground_truth": [
@@ -485,9 +537,11 @@
             "Ogawa Mataji",
             "Vera Mileti\u0107",
             "Doria Ragland",
-            "Maria Thins",
             "Abd al-Muttalib",
-            "Matilda II, Countess of Nevers"
+            "Matilda II, Countess of Nevers",
+            "Kaya Alp",
+            "Mohammad Ilyas (cricketer)",
+            "Motherland (disambiguation)"
         ],
         "question": "Who is Mugain's mother-in-law?",
         "ground_truth": [
@@ -505,7 +559,9 @@
             "James A. Kowalski",
             "Jesse E. Hobson",
             "Sir Thomas Wheate, 2nd Baronet",
-            "Coulson Wallop"
+            "Coulson Wallop",
+            "John Wallop, 2nd Earl of Portsmouth",
+            "John Westley"
         ],
         "question": "Where did Theodore Salisbury Woolsey's father study?",
         "ground_truth": [
@@ -523,7 +579,9 @@
             "Jim Wynorski",
             "The Return of Jack Slade",
             "Jason Moore (director)",
-            "Fred Roy Krug"
+            "Coney Island Baby (film)",
+            "Wrong Turn 5: Bloodlines",
+            "The Return of Bulldog Drummond"
         ],
         "question": "What is the place of birth of the director of film The Return Of Swamp Thing?",
         "ground_truth": [
@@ -540,8 +598,10 @@
             "Me and Bobby McGee",
             "Janis Joplin",
             "Where Was I",
-            "Donnie Elbert",
-            "Jack Lee (musician)"
+            "Jack Lee (musician)",
+            "O Valencia!",
+            "Joseph J. Sullivan (vaudeville)",
+            "When the Stars Go Blue"
         ],
         "question": "Where was the place of death of the performer of song I Can'T See Myself Leaving You?",
         "ground_truth": [
@@ -556,10 +616,12 @@
             "Playing It Wild",
             "Ian Barry (director)",
             "Michael Curtiz",
-            "Jim Wynorski",
             "Frank Launder",
             "David Bradley (director)",
-            "James Tinling"
+            "James Tinling",
+            "Illusions (1982 film)",
+            "Gurinder Chadha",
+            "Everybody Wants to Be Italian"
         ],
         "question": "Which film has the director who was born later, Playing It Wild or I'Ll Be Going Now?",
         "ground_truth": [
@@ -579,7 +641,9 @@
             "Isabella of Bourbon",
             "Bertha, daughter of Lothair II",
             "Theobald of Arles",
-            "Matilda II, Countess of Nevers"
+            "Matilda II, Countess of Nevers",
+            "Florine of Burgundy",
+            "Sibylla of Burgundy, Duchess of Burgundy"
         ],
         "question": "What nationality is Beatrice I, Countess Of Burgundy's husband?",
         "ground_truth": [
@@ -590,14 +654,16 @@
     {
         "answer": "",
         "evidence": [
-            "45 Fathers",
-            "Christ Walking on the Water",
             "Alberto De Martino",
             "David Bradley (director)",
             "Once You're Born You Can No Longer Hide",
             "Frank Launder",
             "Michael Curtiz",
-            "John Korty"
+            "John Korty",
+            "Dark River (2017 film)",
+            "Alex Cox",
+            "Robert Florey",
+            "It's a Wonderful Afterlife"
         ],
         "question": "Which film has the director born later, Christ Walking On The Water or 45 Fathers?",
         "ground_truth": [
@@ -617,7 +683,9 @@
             "The Wallflower (Dance with Me, Henry)",
             "Jack Lee (musician)",
             "Joseph J. Sullivan (vaudeville)",
-            "Me and Bobby McGee"
+            "Me and Bobby McGee",
+            "Dance of Death (disambiguation)",
+            "Pam Mark Hall"
         ],
         "question": "Where was the performer of song Come Dance With Me (Song) born?",
         "ground_truth": [
@@ -632,10 +700,12 @@
             "Interview with a Hitman",
             "David Bradley (director)",
             "Frank Launder",
-            "Talking About Jacqueline",
             "James Tinling",
             "Dana Blankstein",
-            "The Private Life of a Modern Woman"
+            "The Private Life of a Modern Woman",
+            "Luis Mandoki",
+            "Ian Barry (director)",
+            "Declan O'Brien"
         ],
         "question": "Where does the director of film Talk About A Stranger work at?",
         "ground_truth": [
@@ -647,13 +717,15 @@
         "answer": "",
         "evidence": [
             "Holm J\u00f8lsen",
-            "Gideon Johnson Pillow",
             "Sven Ulric Palme",
             "Barthold A. Butensch\u00f8n Sr.",
             "Olof Palme",
             "Lisbeth Palme",
-            "Jesse E. Hobson",
-            "John Adams (merchant)"
+            "John Adams (merchant)",
+            "Jocelyn Lovell",
+            "Judah Even Shemuel",
+            "John Middleton Murry Jr.",
+            "Sir John McEwen, 1st Baronet"
         ],
         "question": "Who was born later, Gideon Johnson Pillow or Holm J\u00f8lsen?",
         "ground_truth": [
@@ -665,13 +737,15 @@
         "answer": "",
         "evidence": [
             "Inherent Vice (film)",
-            "DJ Vice",
-            "Jonny Greenwood",
             "Alex Cox",
             "In the City of Sylvia",
             "Luis Mandoki",
             "Lloyd (film)",
-            "Bombay Dreams (film)"
+            "Bombay Dreams (film)",
+            "James Tinling",
+            "Richard T. Jones",
+            "Ian Barry (director)",
+            "Coney Island Baby (film)"
         ],
         "question": "What is the place of birth of the composer of film Inherent Vice (Film)?",
         "ground_truth": [
@@ -683,13 +757,15 @@
         "answer": "",
         "evidence": [
             "Dangerously They Live",
-            "Salad by the Roots",
             "Julie Dash",
             "Illusions (1982 film)",
             "Jackie Kong",
             "The Return of Swamp Thing",
-            "Kabani Nadi Chuvannappol",
-            "Wrong Turn 3: Left for Dead"
+            "Wrong Turn 3: Left for Dead",
+            "Interview with a Hitman",
+            "Swamp Thing (film)",
+            "Life Is What You Make It (film)",
+            "Hands Up or I'll Shoot"
         ],
         "question": "Which film whose director is younger, Dangerously They Live or Salad By The Roots?",
         "ground_truth": [
@@ -706,10 +782,12 @@
             "In the City of Sylvia",
             "Sibylla of Burgundy, Duchess of Burgundy",
             "Vera Mileti\u0107",
-            "Peter Burroughs",
             "Stan Rice",
             "Stan Marks",
-            "John Middleton Murry"
+            "John Middleton Murry",
+            "Carol Rymer Davis",
+            "Teutberga",
+            "The Private Life of Helen of Troy"
         ],
         "question": "Where did Sylvia Burka's husband die?",
         "ground_truth": [
@@ -723,11 +801,13 @@
             "Pamela Ann Rymer",
             "Ludwig Elsbett",
             "Carol Rymer Davis",
-            "Pamela Bach",
-            "The Private Life of Louis XIV",
             "Pamela Zoline",
             "Pamela Des Barres",
-            "Pam Mark Hall"
+            "Pam Mark Hall",
+            "Pam Bowers",
+            "Ermengarde of Tours",
+            "Robert A. Stemmle",
+            "Edwin L. Marin"
         ],
         "question": "Who lived longer, Ludwig Elsbett or Pamela Ann Rymer?",
         "ground_truth": [
@@ -745,7 +825,9 @@
             "Bommalattam (2008 film)",
             "One and Five",
             "Kabani Nadi Chuvannappol",
-            "South of the Clouds (2004 film)"
+            "South of the Clouds (2004 film)",
+            "Shima (film)",
+            "Interview with a Hitman"
         ],
         "question": "Which film whose director is younger, Phalitamsha or Gladiators Seven?",
         "ground_truth": [
@@ -765,7 +847,9 @@
             "A Kind of America",
             "The Hairdresser",
             "Jim Wynorski",
-            "Alberto De Martino"
+            "Alberto De Martino",
+            "Coney Island Baby (film)",
+            "John Korty"
         ],
         "question": "Which film has the director who was born later, Henry Goes Arizona or The Blue Collar Worker And The Hairdresser In A Whirl Of Sex And Politics?",
         "ground_truth": [
@@ -785,7 +869,9 @@
             "Albert Thompson (footballer, born 1912)",
             "Adolf I of Lotharingia",
             "Fred Le Deux",
-            "Alexander Fuks"
+            "Alexander Fuks",
+            "Theobald of Arles",
+            "Frederick V, Duke of Swabia"
         ],
         "question": "Who was born first, Hywel Teifi Edwards or Felix Schuster?",
         "ground_truth": [
@@ -797,13 +883,15 @@
         "answer": "",
         "evidence": [
             "Tombstone Rashomon",
-            "Waiting for the Clouds",
             "Ky\u014den Kobanzame",
             "South of the Clouds (2004 film)",
             "Michael Curtiz",
             "Robert Florey",
             "Luis Mandoki",
-            "Clarence Brown"
+            "Clarence Brown",
+            "Shima (film)",
+            "Robert North Bradbury",
+            "It's a Wonderful Afterlife"
         ],
         "question": "Which film has the director who was born first, Tombstone Rashomon or Waiting For The Clouds?",
         "ground_truth": [
@@ -820,10 +908,12 @@
             "Billy Milano",
             "Corey Snide",
             "Me and Bobby and Bobby's Brother",
-            "Jim Bob",
             "Matt Corboy",
+            "Jim Bob",
             "Jack Lee (musician)",
-            "Ben Palmer"
+            "Ben Palmer",
+            "Joseph J. Sullivan (vaudeville)",
+            "Billy Elliot"
         ],
         "question": "Where was the performer of song B Boy (Song) detained?",
         "ground_truth": [
@@ -841,7 +931,9 @@
             "Georges M\u00e9li\u00e8s",
             "Dying God",
             "Once You're Born You Can No Longer Hide",
-            "My Little Eye"
+            "My Little Eye",
+            "The Return of Swamp Thing",
+            "In the City of Sylvia"
         ],
         "question": "Which film has the director who was born later, Illusions (1982 Film) or It'S A Wonderful Afterlife?",
         "ground_truth": [
@@ -858,10 +950,12 @@
             "Algiers (film)",
             "In the City of Sylvia",
             "One and Five",
-            "Date at Midnight",
             "A Kind of America",
             "Luis Mandoki",
-            "Salad by the Roots"
+            "Salad by the Roots",
+            "Operation Leopard",
+            "Ky\u014den Kobanzame",
+            "Aldri annet enn br\u00e5k"
         ],
         "question": "Are both movies, Naked Tango and Algiers (Film), from the same country?",
         "ground_truth": [
@@ -877,9 +971,11 @@
             "Albert \u00c9douard Le Brethon de Caligny",
             "Sir Thomas Beaumont, 1st Baronet",
             "Sir Thomas Southwell, 1st Baronet",
-            "Sir Thomas Dereham, 4th Baronet",
             "Coulson Wallop",
-            "Thomas Bramhall"
+            "Thomas Bramhall",
+            "Sir Roger Lort, 1st Baronet",
+            "John Wallop, 2nd Earl of Portsmouth",
+            "Theodore Salisbury Woolsey"
         ],
         "question": "Who lived longer, Sir Thomas Wheate, 1St Baronet or Albert \u00c9douard Le Brethon De Caligny?",
         "ground_truth": [
@@ -897,7 +993,9 @@
             "Henri Verdun",
             "Kurt Schr\u00f6der",
             "Michael Curtiz",
-            "Stephen Warbeck"
+            "Stephen Warbeck",
+            "Robert Florey",
+            "Walter Ulfig"
         ],
         "question": "Where did the composer of film The Straw Hat die?",
         "ground_truth": [
@@ -915,7 +1013,9 @@
             "Dark River (2017 film)",
             "Ian Barry (director)",
             "David Bradley (director)",
-            "The Night of Nights"
+            "The Night of Nights",
+            "The Merry Gentleman",
+            "Denys Desjardins"
         ],
         "question": "Where does the director of film A Nest Of Noblemen work at?",
         "ground_truth": [
@@ -933,7 +1033,9 @@
             "Pia Ravenna",
             "Ver\u00f3nica Mar\u00eda Ravenna",
             "Benedetto Ghirlandaio",
-            "Dino Risi"
+            "Dino Risi",
+            "Bill Saluga",
+            "Roberto Savio"
         ],
         "question": "Were both Pietro Salini and Domenico Ravenna, born in the same place?",
         "ground_truth": [

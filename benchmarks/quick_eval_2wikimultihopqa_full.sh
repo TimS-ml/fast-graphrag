@@ -5,14 +5,14 @@
 # [multihop] Percentage of queries with perfect retrieval: 0.375
 
 # Improved HNSW
-# Percentage of queries with perfect retrieval: 0.47058823529411764
-# [multihop] Percentage of queries with perfect retrieval: 0.375
+# Percentage of queries with perfect retrieval: 0.5098039215686274
+# [multihop] Percentage of queries with perfect retrieval: 0.4
 
 DEBUG=2
-# SCRIPT_NAME=vdb_debug.py
-SCRIPT_NAME=vdb_benchmark_bf.py
-N=2
-# N=51
+SCRIPT_NAME=vdb_debug.py
+# SCRIPT_NAME=vdb_benchmark_bf.py
+# N=2
+N=51
 
 echo -e "\n\n++++++++++++++++++++Script name: $SCRIPT_NAME++++++++++++++++++++"
 

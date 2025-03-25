@@ -53,7 +53,14 @@ class VectorStorage:
         """Create vector storage with HNSW."""
         self.workspace = workspace
         self.vdb = HNSWVectorStorage[int, Any](
-            config=HNSWVectorStorageConfig(ef_construction=96, ef_search=48),
+            config=HNSWVectorStorageConfig(
+                # ef_construction=96, 
+                # ef_search=48
+                ef_construction=1000, 
+                M=160,
+                ef_search=1000,
+                num_threads=-1
+            ),
             namespace=workspace.make_for("vdb"),
             embedding_dim=1536,
         )
@@ -204,10 +211,10 @@ async def upsert_to_vdb(data: List[Tuple[str, str]], working_dir: str = "./"):
     await storage.insert_start()
     
     ids = [xxhash.xxh64(corpus).intdigest() for _, (title, corpus) in data]
-    cprint(ids, new_line=True)
+    cprint(ids[:3], new_line=True)
     
     pair_data = [(title, corpus) for _, (title, corpus) in data]
-    cprint(pair_data, new_line=True)
+    cprint(pair_data[:2], new_line=True)
     
     await storage.upsert(ids, pair_data)
     await storage.insert_done()
@@ -336,7 +343,7 @@ if __name__ == "__main__":
         async def _query_task(query: Query) -> Tuple[Query, str]:
             # NOTE: include the ground truth in the query
             cprint(query, c='blue', new_line=True)
-            result = await query_from_vdb(query.question, 8, working_dir)
+            result = await query_from_vdb(query.question, 10, working_dir)
             return query, result
 
         async def _run_benchmark():
@@ -350,6 +357,7 @@ if __name__ == "__main__":
             for r in answers:
                 question, answer = r
                 a, c = answer.split("`````")
+                cprint(c, new_line=True, c='red')
                 chunks = c.split("=====")
                 chunks = dict([chunk.split(":=") for chunk in chunks])
                 
