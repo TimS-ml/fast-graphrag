@@ -37,7 +37,7 @@ class HNSWVectorStorage(BaseVectorStorage[GTId, GTEmbedding]):
 
     @property
     def max_size(self) -> int:
-        return self._index.get_max_elements() or self.INITIAL_MAX_ELEMENT
+        return self._index.get_max_elements() or self.INITIAL_MAX_ELEMENTS
 
     async def upsert(
         self,

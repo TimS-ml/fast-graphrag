@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 from typing import (
     Any,
-    Awaitable,
-    Callable,
     Dict,
     Generic,
     Iterable,
@@ -10,6 +8,7 @@ from typing import (
     Literal,
     Mapping,
     Optional,
+    Sequence,
     Tuple,
     Union,
     final,
@@ -17,7 +16,7 @@ from typing import (
 
 from scipy.sparse import csr_matrix  # type: ignore
 
-from fast_graphrag._types import GTBlob, GTEdge, GTEmbedding, GTId, GTKey, GTNode, GTValue, TIndex, TScore
+from fast_graphrag._types import GTBlob, GTEdge, GTEmbedding, GTId, GTKey, GTNode, GTValue, THash, TIndex, TScore
 from fast_graphrag._utils import logger
 
 from ._namespace import Namespace
@@ -209,9 +208,6 @@ class BaseGraphStorage(BaseStorage, Generic[GTNode, GTEdge, GTId]):
     async def edge_count(self) -> int:
         raise NotImplementedError
 
-    async def get_edge_ids(self) -> Iterable[GTId]:
-        raise NotImplementedError
-
     async def get_node(self, node: Union[GTNode, GTId]) -> Union[Tuple[GTNode, TIndex], Tuple[None, None]]:
         raise NotImplementedError
 
@@ -223,7 +219,7 @@ class BaseGraphStorage(BaseStorage, Generic[GTNode, GTEdge, GTId]):
     ) -> Iterable[Tuple[GTEdge, TIndex]]:
         raise NotImplementedError
 
-    async def get_edge_indices(
+    async def _get_edge_indices(
         self, source_node: Union[GTId, TIndex], target_node: Union[GTId, TIndex]
     ) -> Iterable[TIndex]:
         raise NotImplementedError
@@ -244,7 +240,7 @@ class BaseGraphStorage(BaseStorage, Generic[GTNode, GTEdge, GTId]):
         self,
         edges: Optional[Iterable[GTEdge]] = None,
         indices: Optional[Iterable[Tuple[TIndex, TIndex]]] = None,
-        attrs: Optional[Mapping[str, Iterable[Any]]] = None,
+        attrs: Optional[Mapping[str, Sequence[Any]]] = None,
     ) -> List[TIndex]:
         raise NotImplementedError
 
@@ -257,9 +253,7 @@ class BaseGraphStorage(BaseStorage, Generic[GTNode, GTEdge, GTId]):
     async def get_entities_to_relationships_map(self) -> csr_matrix:
         raise NotImplementedError
 
-    async def get_relationships_to_chunks_map(
-        self, key: str, key_to_index_fn: Callable[[Iterable[GTKey]], Awaitable[Iterable[TIndex]]], num_chunks: int
-    ) -> csr_matrix:
+    async def get_relationships_to_chunks_map(self) -> dict[int, List[THash]]:
         raise NotImplementedError
 
     async def get_relationships_attrs(self, key: str) -> List[List[Any]]:

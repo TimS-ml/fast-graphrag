@@ -14,6 +14,7 @@ from fast_graphrag._services._state_manager import BaseStateManagerService
 from fast_graphrag._storage._base import BaseGraphStorage, BaseIndexedKeyValueStorage, BaseVectorStorage
 from fast_graphrag._types import GTChunk, GTEdge, GTEmbedding, GTHash, GTId, GTNode, TContext, TDocument, TQueryResponse
 from fast_graphrag._utils import TOKEN_TO_CHAR_RATIO, get_event_loop, logger
+from pydantic import BaseModel
 
 
 @dataclass
@@ -128,25 +129,25 @@ class BaseGraphRAG(Generic[GTEmbedding, GTHash, GTChunk, GTNode, GTEdge, GTId]):
             await self.state_manager.upsert(
                 llm=self.llm_service, subgraphs=subgraphs, documents=new_chunks_per_data, show_progress=show_progress
             )
-
-            # Commit the changes if all is successful
-            await self.state_manager.insert_done()
-
-            # Return the total number of entities, relationships, and chunks
-            return (
+            r = (
                 await self.state_manager.get_num_entities(),
                 await self.state_manager.get_num_relations(),
                 await self.state_manager.get_num_chunks(),
             )
+            # Commit the changes if all is successful
+            await self.state_manager.insert_done()
+
+            # Return the total number of entities, relationships, and chunks
+            return r
         except Exception as e:
             logger.error(f"Error during insertion: {e}")
             raise e
 
-    def query(self, query: str, params: Optional[QueryParam] = None) -> TQueryResponse[GTNode, GTEdge, GTHash, GTChunk]:
+    def query(self, query: str, params: Optional[QueryParam] = None, response_model = None) -> TQueryResponse[GTNode, GTEdge, GTHash, GTChunk]:
         async def _query() -> TQueryResponse[GTNode, GTEdge, GTHash, GTChunk]:
             await self.state_manager.query_start()
             try:
-                answer = await self.async_query(query, params)
+                answer = await self.async_query(query, params, response_model)
                 return answer
             except Exception as e:
                 logger.error(f"Error during query: {e}")
@@ -157,7 +158,7 @@ class BaseGraphRAG(Generic[GTEmbedding, GTHash, GTChunk, GTNode, GTEdge, GTId]):
         return get_event_loop().run_until_complete(_query())
 
     async def async_query(
-        self, query: Optional[str], params: Optional[QueryParam] = None
+        self, query: Optional[str], params: Optional[QueryParam] = None, response_model = None
     ) -> TQueryResponse[GTNode, GTEdge, GTHash, GTChunk]:
         """Query the graph with a given input.
 
@@ -199,6 +200,7 @@ class BaseGraphRAG(Generic[GTEmbedding, GTHash, GTChunk, GTNode, GTEdge, GTId]):
         if params.only_context:
             answer = ""
         else:
+            response_model = TAnswer if response_model is None else response_model
             llm_response, _ = await format_and_send_prompt(
                 prompt_key="generate_response_query_with_references"
                 if params.with_references
@@ -208,9 +210,12 @@ class BaseGraphRAG(Generic[GTEmbedding, GTHash, GTChunk, GTNode, GTEdge, GTId]):
                     "query": query,
                     "context": context_str
                 },
-                response_model=TAnswer,
+                response_model=response_model,
             )
-            answer = llm_response.answer
+            if response_model is None:
+                answer = llm_response.answer
+            else:
+                answer = llm_response
 
         return TQueryResponse[GTNode, GTEdge, GTHash, GTChunk](response=answer, context=context)
 

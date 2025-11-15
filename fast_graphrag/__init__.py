@@ -31,6 +31,7 @@ from fast_graphrag._storage import (
     DefaultVectorStorage,
     DefaultVectorStorageConfig,
 )
+from fast_graphrag._storage._base import BaseGraphStorage
 from fast_graphrag._storage._namespace import Workspace
 from fast_graphrag._types import TChunk, TEmbedding, TEntity, THash, TId, TIndex, TRelation
 
@@ -63,7 +64,7 @@ class GraphRAG(BaseGraphRAG[TEmbedding, THash, TChunk, TEntity, TRelation, TId])
         llm_service: BaseLLMService = field(default_factory=lambda: DefaultLLMService())
         embedding_service: BaseEmbeddingService = field(default_factory=lambda: DefaultEmbeddingService())
 
-        graph_storage: DefaultGraphStorage[TEntity, TRelation, TId] = field(
+        graph_storage: BaseGraphStorage[TEntity, TRelation, TId] = field(
             default_factory=lambda: DefaultGraphStorage(DefaultGraphStorageConfig(node_cls=TEntity, edge_cls=TRelation))
         )
         entity_storage: DefaultVectorStorage[TIndex, TEmbedding] = field(

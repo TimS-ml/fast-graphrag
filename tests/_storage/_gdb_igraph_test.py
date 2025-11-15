@@ -40,7 +40,7 @@ class TestIGraphStorage(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, (None, None))
 
     async def test_get_edges(self):
-        self.storage.get_edge_indices = AsyncMock(return_value=[0, 1])
+        self.storage._get_edge_indices = AsyncMock(return_value=[0, 1])
         self.storage.get_edge_by_index = AsyncMock(
             side_effect=[TRelation(source="node1", target="node2", description="txt"), None]
         )
@@ -52,7 +52,7 @@ class TestIGraphStorage(unittest.IsolatedAsyncioTestCase):
         self.storage._graph.vs.find.side_effect = lambda name: MagicMock(index=name)
         self.storage._graph.es.select.return_value = [MagicMock(index=0), MagicMock(index=1)]
 
-        indices = await self.storage.get_edge_indices("node1", "node2")
+        indices = await self.storage._get_edge_indices("node1", "node2")
         self.assertEqual(list(indices), [0, 1])
 
     async def test_get_node_by_index(self):

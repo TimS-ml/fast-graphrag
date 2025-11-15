@@ -88,7 +88,7 @@ GTChunk = TypeVar("GTChunk", bound=BTChunk)
 TEmbeddingType: TypeAlias = np.float32
 TEmbedding: TypeAlias = npt.NDArray[TEmbeddingType]
 
-THash: TypeAlias = np.uint64
+THash: TypeAlias = np.int64
 TScore: TypeAlias = np.float32
 TIndex: TypeAlias = int
 TId: TypeAlias = str

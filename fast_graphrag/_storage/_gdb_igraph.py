@@ -1,7 +1,7 @@
 import gzip
 import os
 from dataclasses import asdict, dataclass, field
-from typing import Any, Generic, Iterable, List, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Generic, Iterable, List, Mapping, Optional, Sequence, Tuple, Type, Union
 
 import igraph as ig  # type: ignore
 import numpy as np
@@ -59,7 +59,7 @@ class IGraphStorage(BaseGraphStorage[GTNode, GTEdge, GTId]):
     async def get_edges(
         self, source_node: Union[GTId, TIndex], target_node: Union[GTId, TIndex]
     ) -> Iterable[Tuple[GTEdge, TIndex]]:
-        indices = await self.get_edge_indices(source_node, target_node)
+        indices = await self._get_edge_indices(source_node, target_node)
         edges: List[Tuple[GTEdge, TIndex]] = []
         for index in indices:
             edge = await self.get_edge_by_index(index)
@@ -67,7 +67,7 @@ class IGraphStorage(BaseGraphStorage[GTNode, GTEdge, GTId]):
                 edges.append((edge, index))
         return edges
 
-    async def get_edge_indices(
+    async def _get_edge_indices(
         self, source_node: Union[GTId, TIndex], target_node: Union[GTId, TIndex]
     ) -> Iterable[TIndex]:
         if type(source_node) is TIndex:
@@ -128,7 +128,7 @@ class IGraphStorage(BaseGraphStorage[GTNode, GTEdge, GTId]):
         self,
         edges: Optional[Iterable[GTEdge]] = None,
         indices: Optional[Iterable[Tuple[TIndex, TIndex]]] = None,
-        attrs: Optional[Mapping[str, Iterable[Any]]] = None,
+        attrs: Optional[Mapping[str, Sequence[Any]]] = None,
     ) -> List[TIndex]:
         if indices is not None:
             assert edges is None, "Cannot provide both indices and edges."

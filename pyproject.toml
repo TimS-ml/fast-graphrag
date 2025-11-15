@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fast-graphrag"
-version = "0.0.4-post1"
+version = "0.0.5"
 description = ""
 authors = ["Luca Pinchetti <luca@circlemind.co>", "Antonio Vespoli <antonio@circlemind.co>", "Yuhang Song <yuhang@circlemind.co>"]
 packages = [{include = "fast_graphrag" }]

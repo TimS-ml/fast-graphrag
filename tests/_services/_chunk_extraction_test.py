@@ -36,7 +36,7 @@ class TestDefaultChunkingService(unittest.IsolatedAsyncioTestCase):
             self.chunking_service,
             "_extract_chunks",
             return_value=[
-                MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc1.data)), content=doc1.data, metadata=doc1.metadata)
+                MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc1.data) // 2), content=doc1.data, metadata=doc1.metadata)
             ],
         ) as mock_extract_chunks:
             chunks = await self.chunking_service.extract(documents)
@@ -56,7 +56,7 @@ class TestDefaultChunkingService(unittest.IsolatedAsyncioTestCase):
             self.chunking_service,
             "_extract_chunks",
             return_value=[
-                MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc1.data)), content=doc1.data, metadata=doc1.metadata)
+                MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc1.data) // 2), content=doc1.data, metadata=doc1.metadata)
             ],
         ) as mock_extract_chunks:
             chunks = await self.chunking_service.extract(documents)
@@ -72,7 +72,7 @@ class TestDefaultChunkingService(unittest.IsolatedAsyncioTestCase):
 
     async def test_extract_chunks(self):
         doc = MockDocument(data="test data", metadata={"meta": "data"})
-        chunk = MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc.data)), content=doc.data, metadata=doc.metadata)
+        chunk = MockChunk(id=THash(xxhash.xxh3_64_intdigest(doc.data) // 2), content=doc.data, metadata=doc.metadata)
 
         chunks = await self.chunking_service._extract_chunks(doc)
         self.assertEqual(len(chunks), 1)

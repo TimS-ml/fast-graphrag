@@ -75,7 +75,7 @@ class DefaultChunkingService(BaseChunkingService[TChunk]):
 
         return [
             TChunk(
-                id=THash(xxhash.xxh3_64_intdigest(chunk)),
+                id=THash(xxhash.xxh3_64_intdigest(chunk) // 2),
                 content=chunk,
                 metadata=data.metadata,
             )
