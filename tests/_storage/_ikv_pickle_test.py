@@ -1,3 +1,12 @@
+"""Unit tests for pickle-based indexed key-value storage.
+
+This module tests the PickleIndexedKeyValueStorage implementation which
+provides an indexed dictionary-like storage with:
+- Key-to-index mapping for efficient lookups
+- Index reuse for deleted entries
+- Batch operations
+- Pickle-based persistence
+"""
 # type: ignore
 import pickle
 import unittest
@@ -10,6 +19,14 @@ from fast_graphrag._storage._ikv_pickle import PickleIndexedKeyValueStorage
 
 
 class TestPickleIndexedKeyValueStorage(unittest.IsolatedAsyncioTestCase):
+    """Test suite for indexed key-value storage operations.
+
+    Tests key-value storage including:
+    - Get/set operations by key and by index
+    - Upsert and delete operations
+    - Masking for new vs. existing keys
+    - Index management and reuse
+    """
     async def asyncSetUp(self):
         self.storage = PickleIndexedKeyValueStorage(namespace=None, config=None)
         await self.storage._insert_start()

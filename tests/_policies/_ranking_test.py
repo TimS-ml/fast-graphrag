@@ -1,3 +1,12 @@
+"""Unit tests for ranking policies.
+
+This module tests various ranking policies used to filter and select
+items from scored results. Tests cover:
+- Threshold-based filtering
+- Top-K selection
+- Elbow method for automatic cutoff determination
+- Sparse matrix operations
+"""
 import unittest
 
 import numpy as np
@@ -12,6 +21,13 @@ from fast_graphrag._policies._ranking import (
 
 
 class TestRankingPolicyWithThreshold(unittest.TestCase):
+    """Test suite for threshold-based ranking policy.
+
+    Tests filtering behavior that:
+    - Keeps only items above a specified threshold
+    - Removes items below the threshold
+    - Handles edge cases (all above, all below, empty)
+    """
     def test_threshold(self):
         policy = RankingPolicy_WithThreshold(RankingPolicy_WithThreshold.Config(0.1))
         scores = csr_matrix([0.05, 0.2, 0.15, 0.05])
@@ -42,6 +58,14 @@ class TestRankingPolicyWithThreshold(unittest.TestCase):
 
 
 class TestRankingPolicyTopK(unittest.TestCase):
+    """Test suite for Top-K ranking policy.
+
+    Tests selection behavior that:
+    - Keeps only the top K highest-scoring items
+    - Handles cases where K exceeds available items
+    - Works correctly with K=0 (no filtering)
+    - Handles all-zero scores correctly
+    """
     def test_top_k(self):
         policy = RankingPolicy_TopK(RankingPolicy_TopK.Config(2))
         scores = csr_matrix([0.05, 0.05, 0.2, 0.15, 0.25])
@@ -77,6 +101,14 @@ class TestRankingPolicyTopK(unittest.TestCase):
 
 
 class TestRankingPolicyElbow(unittest.TestCase):
+    """Test suite for Elbow method ranking policy.
+
+    Tests automatic cutoff determination using the elbow method that:
+    - Identifies the optimal cutoff point in score distribution
+    - Handles uniform distributions (all same values)
+    - Handles all-zero scores
+    - Adapts to score distribution patterns
+    """
     def test_elbow(self):
         policy = RankingPolicy_Elbow(config=None)
         scores = csr_matrix([0.05, 0.2, 0.1, 0.25, 0.1])

@@ -1,3 +1,12 @@
+"""Unit tests for iGraph-based graph database storage.
+
+This module tests the IGraphStorage implementation which uses the igraph
+library for graph storage and operations. Tests cover:
+- Node and edge operations (CRUD)
+- Graph algorithms (PageRank scoring)
+- Entity-relationship mappings
+- File persistence and loading
+"""
 # type: ignore
 
 import unittest
@@ -10,6 +19,14 @@ from fast_graphrag._types import TEntity, TRelation
 
 
 class TestIGraphStorage(unittest.IsolatedAsyncioTestCase):
+    """Test suite for IGraphStorage graph database operations.
+
+    Tests graph storage operations including:
+    - Node/edge creation, retrieval, update, and deletion
+    - Graph traversal and scoring algorithms
+    - Entity-to-relationship mapping
+    - Data persistence with pickle serialization
+    """
     def setUp(self):
         self.config = IGraphStorageConfig(node_cls=TEntity, edge_cls=TRelation)
         self.storage = IGraphStorage(config=self.config)

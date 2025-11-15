@@ -1,3 +1,12 @@
+"""Unit tests for storage namespace and workspace management.
+
+This module tests the workspace and namespace system for managing
+storage file paths and checkpoint functionality. Tests cover:
+- Workspace creation and path management
+- Checkpoint creation and fallback
+- Namespace path resolution
+- Error handling for invalid storage states
+"""
 import gc
 import os
 import shutil
@@ -9,6 +18,14 @@ from fast_graphrag._storage._namespace import Namespace, Workspace
 
 
 class TestWorkspace(unittest.IsolatedAsyncioTestCase):
+    """Test suite for Workspace management.
+
+    Tests workspace functionality including:
+    - Workspace initialization and cleanup
+    - Load and save path management
+    - Checkpoint fallback mechanism for error recovery
+    - Directory creation and validation
+    """
     def setUp(self):
         def _(self: Workspace) -> None:
             pass
@@ -90,6 +107,14 @@ class TestWorkspace(unittest.IsolatedAsyncioTestCase):
 
 
 class TestNamespace(unittest.TestCase):
+    """Test suite for Namespace path management.
+
+    Tests namespace functionality including:
+    - Path resolution for load and save operations
+    - Checkpoint-based path lookup
+    - Directory creation for save paths
+    - Resource path management
+    """
     def setUp(self):
         def _(self: Workspace) -> None:
             pass

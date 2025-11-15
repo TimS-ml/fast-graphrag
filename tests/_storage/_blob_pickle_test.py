@@ -1,3 +1,9 @@
+"""Unit tests for pickle-based blob storage.
+
+This module tests the PickleBlobStorage implementation which stores
+arbitrary Python objects (blobs) using pickle serialization.
+Tests cover file I/O operations, data persistence, and error handling.
+"""
 # type: ignore
 import pickle
 import unittest
@@ -8,6 +14,13 @@ from fast_graphrag._storage._blob_pickle import PickleBlobStorage
 
 
 class TestPickleBlobStorage(unittest.IsolatedAsyncioTestCase):
+    """Test suite for PickleBlobStorage operations.
+
+    Tests blob storage including:
+    - Setting and retrieving blob data
+    - Loading from and saving to pickle files
+    - Handling missing and invalid storage files
+    """
     async def asyncSetUp(self):
         self.namespace = MagicMock()
         self.namespace.get_load_path.return_value = "blob_data.pkl"
