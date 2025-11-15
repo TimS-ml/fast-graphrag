@@ -1,3 +1,13 @@
+"""Unit tests for HNSW-based vector database storage.
+
+This module tests the HNSWVectorStorage implementation which uses the
+hnswlib library for approximate nearest neighbor search. Tests cover:
+- Vector insertion and index resizing
+- K-nearest neighbor (KNN) queries
+- Similarity scoring across all vectors
+- Index persistence and loading
+- Error handling for invalid storage states
+"""
 # type: ignore
 import pickle
 import unittest
@@ -7,11 +17,21 @@ import numpy as np
 
 from fast_graphrag._storage._vdb_hnswlib import HNSWVectorStorage, HNSWVectorStorageConfig, InvalidStorageError
 
+# Mock database and index for testing
 Vdb = {}
 Index = MagicMock()
 
 
 class TestHNSWVectorStorage(unittest.IsolatedAsyncioTestCase):
+    """Test suite for HNSW vector storage operations.
+
+    Tests vector database operations including:
+    - Upserting vectors with automatic index resizing
+    - KNN queries for nearest neighbor search
+    - Scoring all vectors against query embeddings
+    - Index and metadata persistence
+    - Empty index handling
+    """
     def setUp(self):
         Index.max_size = 5
         Index.get_current_count.side_effect = lambda: len(Vdb)

@@ -1,3 +1,9 @@
+"""Unit tests for base storage functionality.
+
+This module tests the mode management system for storage backends,
+including transitions between insert and query modes and error handling
+for improper mode transitions.
+"""
 # type: ignore
 import unittest
 from unittest.mock import AsyncMock, patch
@@ -6,14 +12,30 @@ from fast_graphrag._storage._base import BaseStorage
 
 
 class TestBaseStorage(unittest.IsolatedAsyncioTestCase):
+    """Test suite for BaseStorage mode management.
+
+    Tests the storage lifecycle and mode transitions between:
+    - None (initial state)
+    - Insert mode (for writing data)
+    - Query mode (for reading data)
+    """
 
     def setUp(self):
+        """Set up a BaseStorage instance for testing."""
         self.storage = BaseStorage(config=None)
 
     @patch.object(BaseStorage, '_insert_start', new_callable=AsyncMock)
     @patch.object(BaseStorage, '_query_done', new_callable=AsyncMock)
     @patch("fast_graphrag._storage._base.logger")
     async def test_insert_start_from_query_mode(self, mock_logger, mock_query_done, mock_insert_start):
+        """Test transitioning to insert mode from query mode.
+
+        Verifies that:
+        - Query mode is properly closed
+        - Insert mode is started
+        - An error is logged for the improper transition
+        - Storage state is correctly updated
+        """
         self.storage._mode = "query"
         self.storage._in_progress = True
 

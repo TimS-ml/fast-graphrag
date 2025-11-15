@@ -1,11 +1,31 @@
-"""Prompts."""
+"""LLM prompt templates for entity extraction, relationship discovery, and query answering.
+
+This module contains all the prompt templates used throughout the fast-graphrag system
+for various LLM-based tasks:
+
+- Entity and relationship extraction from documents
+- Entity description summarization
+- Relationship grouping and deduplication
+- Query entity extraction
+- Response generation with and without source citations
+
+All prompts are stored in the PROMPTS dictionary and referenced by key throughout the codebase.
+"""
 
 from typing import Any, Dict
 
+# Global dictionary storing all prompt templates
+# Keys are prompt identifiers, values are formatted string templates
 PROMPTS: Dict[str, Any] = {}
 
-## NEW
+## Entity and Relationship Extraction Prompts
 
+# System prompt for entity-relationship extraction
+# This prompt instructs the LLM on how to:
+# 1. Identify entities of specific types from documents
+# 2. Extract relationships between entities
+# 3. Ensure all entities are connected in the knowledge graph
+# 4. Output valid JSON in a specific format
 entity_relationship_extraction_text = """# DOMAIN
 {domain}
 
@@ -57,7 +77,11 @@ Document: "Radio City: Radio City is India's first private FM radio station and 
 }}
 """
 
+# Store the entity-relationship extraction system prompt
 PROMPTS["entity_relationship_extraction_system"] = entity_relationship_extraction_text
+
+# User prompt for entity-relationship extraction
+# This is the actual user message containing the document and entity types to extract
 PROMPTS["entity_relationship_extraction_prompt"] = """**IMPORTANT JSON FORMATTING RULES:**
 - **Output strictly valid JSON with all identified entities and relationships as per the example.**
 - Do NOT use brackets or single quotes `(}},],')` to enclose strings within JSON.
@@ -78,12 +102,19 @@ PROMPTS["entity_relationship_extraction_prompt"] = """**IMPORTANT JSON FORMATTIN
 OUTPUT:
 """
 
+# Continuation prompt for iterative entity extraction (gleaning process)
+# Used when the system detects that many entities were likely missed in the first pass
 PROMPTS["entity_relationship_continue_extraction_system"] = entity_relationship_extraction_text
 PROMPTS["entity_relationship_continue_extraction_prompt"] = "MANY entities were missed in the last extraction.  Add them below using the same format:"
 
+# Verification prompt to check if entity extraction is complete
+# The LLM should respond "done" or "continue" based on completeness
 PROMPTS["entity_relationship_gleaning_done_extraction_system"] = entity_relationship_extraction_text
 PROMPTS["entity_relationship_gleaning_done_extraction_prompt"] = "Retrospectively check if all entities have been correctly identified: answer done if so, or continue if there are still entities that need to be added."
 
+# Prompt for extracting entities from user queries
+# Separates entities into "named" (specific) and "generic" (types/categories)
+# Used during query processing to identify what to search for in the knowledge graph
 PROMPTS["entity_extraction_query"] = """Given the query below, your task is to extract all entities relevant to perform information retrieval to produce an answer.
 
 -EXAMPLE 1-
@@ -99,7 +130,9 @@ Query: {query}
 Output:
 """
 
-
+# Prompt for summarizing entity descriptions
+# Used when multiple descriptions of the same entity need to be merged
+# The LLM should remove redundancy, resolve contradictions, and create a coherent summary
 PROMPTS[
 	"summarize_entity_descriptions"
 ] = """You are a helpful assistant responsible for generating a summary of the data provided below.
@@ -112,7 +145,9 @@ Current:
 Updated:
 """
 
-
+# Prompt for grouping similar edges (relationships) in the knowledge graph
+# Used to deduplicate and summarize similar relationship descriptions between entities
+# The LLM identifies groups of similar facts and provides a consolidated description
 PROMPTS[
 	"edges_group_similar"
 ] = """You are a helpful assistant responsible for maintaining a list of facts describing the relations between two entities so that information is not redundant.
@@ -147,6 +182,11 @@ Facts:
 Ouput:
 """
 
+# Prompt for generating query responses WITH source citations
+# Instructs the LLM to:
+# 1. Analyze entities, relationships, and source documents
+# 2. Generate a concise answer to the query
+# 3. Include inline citations [source_id] for all information used
 PROMPTS["generate_response_query_with_references"] = """You are a helpful assistant analyzing the given input data to provide an helpful response to the user query.
 
 # INPUT DATA
@@ -170,6 +210,9 @@ Follow these steps:
 Answer:
 """
 
+# Prompt for generating query responses WITHOUT source citations
+# Similar to the above but doesn't require inline references
+# Used when source attribution is not needed
 PROMPTS["generate_response_query_no_references"] = """You are a helpful assistant analyzing the given input data to provide an helpful response to the user query.
 
 # INPUT DATA
@@ -192,4 +235,6 @@ Follow these steps:
 Answer:
 """
 
+# Default failure response when the system cannot answer a query
+# Used as a fallback when query processing fails or no relevant information is found
 PROMPTS["fail_response"] = "Sorry, I'm not able to provide an answer to that question."

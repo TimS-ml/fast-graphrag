@@ -1,3 +1,13 @@
+"""Unit tests for information extraction service.
+
+This module tests the DefaultInformationExtractionService which uses
+LLMs to extract entities and relationships from text chunks.
+Tests cover:
+- Extracting entities from query text
+- Extracting graph structures from documents
+- Integration with LLM services
+- Graph upsert policy application
+"""
 # type: ignore
 import asyncio
 import unittest
@@ -12,6 +22,14 @@ from fast_graphrag._types import TGraph
 
 
 class TestDefaultInformationExtractionService(unittest.IsolatedAsyncioTestCase):
+    """Test suite for information extraction service.
+
+    Tests extraction operations including:
+    - Extracting named and generic entities from queries
+    - Extracting graph structures (entities and relationships) from documents
+    - LLM integration for structured output
+    - Graph storage creation and management
+    """
     def setUp(self):
         self.llm_service = MagicMock(spec=BaseLLMService)
         self.llm_service.send_message = AsyncMock()

@@ -1,4 +1,33 @@
-"""Everything necessary to run a deo with a vdb storage."""
+"""Benchmarking script for brute-force vector database retrieval performance.
+
+This module evaluates FastGraphRAG using a brute-force (exhaustive search) vector
+retrieval baseline. Unlike HNSW which uses approximate nearest neighbors, brute-force
+compares every query to all passages, providing ground truth recall but at O(n) cost.
+
+Pipeline:
+    1. Load benchmark datasets (2wikimultihopqa, hotpotqa)
+    2. Embed all passages using OpenAI embeddings
+    3. Perform exact nearest neighbor search (brute-force)
+    4. Execute queries using exhaustive semantic similarity
+    5. Compute retrieval metrics on exact ranking
+
+This baseline is useful for:
+    - Validating HNSW quality (comparing exact vs approximate results)
+    - Understanding performance trade-offs between accuracy and speed
+    - Debugging cases where approximate search misses relevant passages
+
+Key components:
+    - VectorStorage: Manages brute-force exact nearest neighbor search
+    - LLMService: Optional answer generation from retrieved context
+    - Query execution with extensive debug output (via boring_utils)
+
+Usage:
+    python vdb_benchmark_bf.py -d <dataset> -n <subset_size> [-c] [-b] [-s]
+
+Note:
+    This script includes debug output utilities (cprint, tprint) for development.
+    Use DEBUG environment variable to control verbosity.
+"""
 
 import argparse
 import asyncio
@@ -30,43 +59,81 @@ async def format_and_send_prompt(
     format_kwargs: dict[str, Any],
     **args: Any,
 ) -> Tuple[str, list[dict[str, str]]]:
-    """Get a prompt, format it with the supplied args, and send it to the LLM."""
+    """Format a prompt template and send it to the LLM for completion.
+
+    Includes debug output to monitor prompt formatting and LLM responses.
+
+    Args:
+        prompt: Template string with placeholders for format_kwargs.
+        llm: OpenAI LLM service instance for calling the model.
+        format_kwargs: Dictionary of values to substitute in the prompt template.
+        **args: Additional keyword arguments to pass to the LLM service.
+
+    Returns:
+        Tuple of (answer_text, rest) where answer_text is the model's response
+        and rest is metadata about the response.
+    """
     # Format the prompt with the supplied arguments
     formatted_prompt = prompt.format(**format_kwargs)
-    cprint(formatted_prompt)
+    cprint(formatted_prompt)  # Debug: print formatted prompt
 
     # Send the formatted prompt to the LLM
     response, rest = await llm.send_message(prompt=formatted_prompt, response_model=TAnswer, **args)
-    cprint(response)
-    cprint(rest)
+    cprint(response)  # Debug: print response
+    cprint(rest)  # Debug: print response metadata
     return response.answer, rest
 
 
-def dump_to_reference_list(data: Iterable[object], separator: str = "\n=====\n\n"):
-    """Convert list of chunks to a string."""
+def dump_to_reference_list(data: Iterable[object], separator: str = "\n=====\n\n") -> str:
+    """Convert list of chunks to a formatted reference string with debug output.
+
+    Args:
+        data: Iterable of objects to be converted to reference items.
+        separator: String separator between items (default: newlines with =====).
+
+    Returns:
+        Formatted string with numbered reference items.
+    """
     result = separator.join([f"[{i + 1}]  {d}" for i, d in enumerate(data)])
-    cprint(result)
+    cprint(result)  # Debug: print formatted reference list
     return result
 
 
 class VectorStorage:
-    """Vector storage with HNSW."""
+    """Manages brute-force (exhaustive) vector retrieval search.
+
+    This class performs exact nearest neighbor search by comparing query embeddings
+    to all passage embeddings. Unlike HNSW, this guarantees finding the true top-k
+    most similar passages at O(n) computational cost.
+
+    Useful for:
+        - Validating approximate search quality
+        - Ground truth retrieval evaluation
+        - Development and debugging
+    """
 
     def __init__(self, workspace: Workspace):
-        """Create vector storage with HNSW."""
+        """Initialize vector storage with brute-force search engine.
+
+        Args:
+            workspace: Workspace instance for managing storage locations.
+        """
         self.workspace = workspace
+        # Configure brute-force search for exhaustive nearest neighbor lookup
         self.vdb = BruteForceVectorStorage[int, Any](
             config=BruteForceVectorStorageConfig(
                 num_threads=-1,  # Kept for API compatibility
-                similarity_cutoff=0.0  # You can adjust this threshold if needed
+                similarity_cutoff=0.0  # No minimum similarity threshold
             ),
             namespace=workspace.make_for("vdb"),
-            embedding_dim=1536,
+            embedding_dim=1536,  # OpenAI embedding dimension
         )
         self.embedder = OpenAIEmbeddingService()
+        # Key-value store for passage text lookup by hash ID
         self.ikv = PickleIndexedKeyValueStorage[int, Any](config=None, namespace=workspace.make_for("ikv"))
+        # Debug output if verbosity is high (DEBUG > 2)
         if DEBUG > 2:
-            tprint("Init Vector storage with HNSW.", sep="-")
+            tprint("Init Vector storage with brute-force search.", sep="-")
             cprint(self.workspace)
             cprint(self.vdb)
             cprint(self.embedder)
@@ -309,21 +376,25 @@ def get_queries(dataset: Any):
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv()  # Load environment variables for API keys
 
-    parser = argparse.ArgumentParser(description="GraphRAG CLI")
+    # Parse command-line arguments for benchmark modes
+    parser = argparse.ArgumentParser(description="Brute-Force Vector Database Benchmark")
     parser.add_argument("-d", "--dataset", default="2wikimultihopqa", help="Dataset to use.")
-    parser.add_argument("-n", type=int, default=0, help="Subset of corpus to use.")
-    parser.add_argument("-c", "--create", action="store_true", help="Create the graph for the given dataset.")
-    parser.add_argument("-b", "--benchmark", action="store_true", help="Benchmark the graph for the given dataset.")
-    parser.add_argument("-s", "--score", action="store_true", help="Report scores after benchmarking.")
+    parser.add_argument("-n", type=int, default=0, help="Subset of corpus to use (0 = all).")
+    parser.add_argument("-c", "--create", action="store_true", help="Build brute-force index from corpus.")
+    parser.add_argument("-b", "--benchmark", action="store_true", help="Execute queries and measure retrieval.")
+    parser.add_argument("-s", "--score", action="store_true", help="Compute and display retrieval metrics.")
     args = parser.parse_args()
 
+    # Load dataset and prepare corpus
     print("Loading dataset...")
     dataset = load_dataset(args.dataset, subset=args.n)
     working_dir = f"./db/vdb_bf/{args.dataset}_{args.n}"
     corpus = get_corpus(dataset, args.dataset)
 
+    # Phase 1: Build brute-force index from corpus passages
+    # This embeds all passages for exhaustive nearest neighbor search
     if args.create:
         print("Dataset loaded. Corpus:", len(corpus))
 
@@ -332,6 +403,8 @@ if __name__ == "__main__":
 
         get_event_loop().run_until_complete(_run_create())
 
+    # Phase 2: Execute queries using exact nearest neighbor search
+    # This provides ground truth retrieval for comparison with approximate methods
     if args.benchmark:
         queries = get_queries(dataset)
 
@@ -362,17 +435,21 @@ if __name__ == "__main__":
                 )
             json.dump(response, f, indent=4)
 
+    # Phase 3: Compute and report retrieval metrics
+    # Evaluates exact retrieval performance for comparison with approximate methods
     if args.benchmark or args.score:
         with open(f"./results/vdb_bf/{args.dataset}_{args.n}.json", "r") as f:
             answers = json.load(f)
 
+        # Load optional multihop subset for detailed analysis
         try:
             with open(f"./questions/{args.dataset}_{args.n}.json", "r") as f:
                 questions_multihop = json.load(f)
         except FileNotFoundError:
             questions_multihop = []
 
-        # Compute retrieval metrics
+        # Compute retrieval recall: fraction of ground truth documents retrieved
+        # With brute-force search, these are exact results (no approximation)
         retrieval_scores: List[float] = []
         retrieval_scores_multihop: List[float] = []
 
@@ -380,12 +457,16 @@ if __name__ == "__main__":
             ground_truth = answer["ground_truth"]
             predicted_evidence = answer["evidence"]
 
+            # Compute recall: intersection of predicted and ground truth divided by ground truth size
             p_retrieved: float = len(set(ground_truth).intersection(set(predicted_evidence))) / len(set(ground_truth))
             retrieval_scores.append(p_retrieved)
 
+            # Track multihop questions separately for comparison
             if answer["question"] in questions_multihop:
                 retrieval_scores_multihop.append(p_retrieved)
 
+        # Report perfect retrieval percentage (perfect = 1.0 score)
+        # Note: These are ground truth metrics (exact search, no approximation error)
         print(
             f"Percentage of queries with perfect retrieval: {np.mean([1 if s == 1.0 else 0 for s in retrieval_scores])}"
         )

@@ -1,3 +1,12 @@
+"""Unit tests for text chunking service.
+
+This module tests the DefaultChunkingService which splits documents
+into smaller chunks for processing. Tests cover:
+- Document chunking with metadata preservation
+- Chunk deduplication via hashing
+- Handling of duplicate content
+- Batch processing of multiple documents
+"""
 # type: ignore
 import unittest
 from dataclasses import dataclass
@@ -12,18 +21,28 @@ from fast_graphrag._types import THash
 
 @dataclass
 class MockDocument:
+    """Mock document class for testing."""
     data: str
     metadata: Dict[str, Any]
 
 
 @dataclass
 class MockChunk:
+    """Mock chunk class for testing."""
     id: THash
     content: str
     metadata: Dict[str, Any]
 
 
 class TestDefaultChunkingService(unittest.IsolatedAsyncioTestCase):
+    """Test suite for document chunking service.
+
+    Tests chunking operations including:
+    - Extracting chunks from documents
+    - Preserving metadata in chunks
+    - Handling duplicate documents
+    - Generating unique chunk IDs via hashing
+    """
     def setUp(self):
         self.chunking_service = DefaultChunkingService()
 

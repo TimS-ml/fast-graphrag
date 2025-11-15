@@ -1,3 +1,12 @@
+"""Unit tests for graph upsert policies.
+
+This module tests various policies for inserting and updating nodes and edges
+in the knowledge graph. Tests cover:
+- Node upsert with description summarization
+- Edge upsert with validation and merging
+- LLM-based deduplication and summarization
+- Relationship grouping and consolidation
+"""
 # type: ignore
 import copy
 import unittest
@@ -17,6 +26,14 @@ from fast_graphrag._storage._base import BaseGraphStorage
 
 
 class TestNodeUpsertPolicy_SummarizeDescription(unittest.IsolatedAsyncioTestCase):  # noqa: N801
+    """Test suite for node upsert policy with description summarization.
+
+    Tests node insertion and update behavior when descriptions exceed
+    size limits, including:
+    - LLM-based summarization when descriptions are too long
+    - Concatenation when descriptions fit within limits
+    - Handling multiple nodes with same or different names
+    """
     async def test_call_same_node_summarize(self):
         # Mock dependencies
         llm = AsyncMock(spec=BaseLLMService)
@@ -113,6 +130,11 @@ class TestNodeUpsertPolicy_SummarizeDescription(unittest.IsolatedAsyncioTestCase
 
 
 class TestEdgeUpsertPolicy_UpsertIfValidNodes(unittest.IsolatedAsyncioTestCase):  # noqa: N801
+    """Test suite for edge upsert policy with node validation.
+
+    Tests edge insertion that only allows edges between valid nodes,
+    filtering out edges with non-existent source or target nodes.
+    """
     async def test_call(self):
         # Mock dependencies
         llm = AsyncMock(spec=BaseLLMService)
@@ -143,6 +165,13 @@ class TestEdgeUpsertPolicy_UpsertIfValidNodes(unittest.IsolatedAsyncioTestCase):
 
 
 class TestDefaultNodeUpsertPolicy(unittest.IsolatedAsyncioTestCase):  # noqa: N801
+    """Test suite for default node upsert policy.
+
+    Tests basic node insertion and update behavior, including:
+    - Upserting nodes with same and different names
+    - Replacing descriptions without summarization
+    - Node deduplication by name
+    """
     async def test_call_same_id(self):
         # Mock dependencies
         llm = AsyncMock(spec=BaseLLMService)
@@ -207,6 +236,14 @@ class TestDefaultNodeUpsertPolicy(unittest.IsolatedAsyncioTestCase):  # noqa: N8
 
 
 class TestEdgeUpsertPolicy_UpsertValidAndMergeSimilarByLLM(unittest.IsolatedAsyncioTestCase):  # noqa: N801
+    """Test suite for edge upsert policy with LLM-based merging.
+
+    Tests advanced edge insertion that:
+    - Groups similar relationships between the same node pairs
+    - Uses LLM to merge and summarize related edges
+    - Deletes redundant edges after merging
+    - Handles edge count thresholds for merging
+    """
     async def asyncSetUp(self):
         self.mock_llm = AsyncMock(spec=BaseLLMService)
         self.mock_target = AsyncMock(spec=BaseGraphStorage)
@@ -324,6 +361,11 @@ class TestEdgeUpsertPolicy_UpsertValidAndMergeSimilarByLLM(unittest.IsolatedAsyn
 
 
 class TestDefaultEdgeUpsertPolicy(unittest.IsolatedAsyncioTestCase):  # noqa: N801
+    """Test suite for default edge upsert policy.
+
+    Tests basic edge insertion without validation or merging,
+    simply inserting all edges into the graph storage.
+    """
     async def test_call(self):
         # Mock dependencies
         llm = AsyncMock(spec=BaseLLMService)

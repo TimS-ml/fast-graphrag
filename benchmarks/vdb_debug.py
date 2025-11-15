@@ -1,3 +1,29 @@
+"""VDB debugging and tracing script for detailed analysis of vector retrieval.
+
+This module extends the VDB benchmarking with extensive debug output throughout
+the retrieval pipeline. It provides detailed visibility into:
+    - Embedding generation and dimensions
+    - HNSW index construction and nearest neighbor results
+    - Query processing and scoring
+    - Context retrieval and passage ranking
+    - LLM interactions for answer generation
+
+Used for:
+    - Troubleshooting retrieval failures
+    - Analyzing why certain queries fail or succeed
+    - Profiling retrieval latency and quality
+    - Validating embedding quality
+    - Debugging data pipeline issues
+
+The debug output is controlled by the DEBUG environment variable:
+    DEBUG=0: No debug output
+    DEBUG=1: Minimal output (major operations)
+    DEBUG=2: Standard debug output
+    DEBUG>2: Detailed output (all operations)
+
+All output uses boring_utils (cprint/tprint) for colored console output.
+"""
+
 import argparse
 import asyncio
 import json
@@ -47,10 +73,25 @@ def dump_to_reference_list(data: Iterable[object], separator: str = "\n=====\n\n
 
 
 class VectorStorage:
-    """Vector storage with HNSW."""
+    """Manages dense vector retrieval with HNSW and extensive debug output.
+
+    This class extends the standard VectorStorage with detailed logging and
+    debug output at each step to facilitate troubleshooting and analysis.
+    Debug output is controlled by the DEBUG environment variable.
+
+    Attributes:
+        workspace: Workspace instance for storage management.
+        vdb: HNSW vector search index.
+        embedder: OpenAI embedding service.
+        ikv: Key-value store for passage text.
+    """
 
     def __init__(self, workspace: Workspace):
-        """Create vector storage with HNSW."""
+        """Initialize vector storage with HNSW and debug output capabilities.
+
+        Args:
+            workspace: Workspace instance for managing storage locations.
+        """
         self.workspace = workspace
         self.vdb = HNSWVectorStorage[int, Any](
             config=HNSWVectorStorageConfig(
@@ -310,25 +351,30 @@ def get_queries(dataset: Any):
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv()  # Load environment variables for API keys and DEBUG level
 
-    parser = argparse.ArgumentParser(description="GraphRAG CLI")
+    # Parse command-line arguments for benchmark modes
+    parser = argparse.ArgumentParser(description="Vector Database Debug Benchmark")
     parser.add_argument("-d", "--dataset", default="2wikimultihopqa", help="Dataset to use.")
-    parser.add_argument("-n", type=int, default=0, help="Subset of corpus to use.")
-    parser.add_argument("-c", "--create", action="store_true", help="Create the graph for the given dataset.")
-    parser.add_argument("-b", "--benchmark", action="store_true", help="Benchmark the graph for the given dataset.")
-    parser.add_argument("-s", "--score", action="store_true", help="Report scores after benchmarking.")
+    parser.add_argument("-n", type=int, default=0, help="Subset of corpus to use (0 = all).")
+    parser.add_argument("-c", "--create", action="store_true", help="Build HNSW index with debug output.")
+    parser.add_argument("-b", "--benchmark", action="store_true", help="Execute queries with debug tracing.")
+    parser.add_argument("-s", "--score", action="store_true", help="Compute and display retrieval metrics.")
     args = parser.parse_args()
-    cprint(args)
+    cprint(args)  # Debug: print parsed arguments
 
+    # Load dataset and prepare corpus with debug output
     print("Loading dataset...")
     dataset = load_dataset(args.dataset, subset=args.n)
     working_dir = f"./db/vdb/{args.dataset}_{args.n}"
     corpus = get_corpus(dataset, args.dataset)
-    cprint(working_dir)
-    cprint(len(corpus))
-    if DEBUG > 2: cprint(corpus)
+    cprint(working_dir)  # Debug: print working directory
+    cprint(len(corpus))  # Debug: print corpus size
+    if DEBUG > 2:
+        cprint(corpus)  # Debug: print full corpus if verbosity is very high
 
+    # Phase 1: Build HNSW vector index from corpus passages with debug output
+    # This embeds all passages and builds the index with detailed logging
     if args.create:
         print("Dataset loaded. Corpus:", len(corpus))
 
@@ -337,11 +383,21 @@ if __name__ == "__main__":
 
         get_event_loop().run_until_complete(_run_create())
 
+    # Phase 2: Execute queries with debug tracing
+    # This provides visibility into the retrieval process for each query
     if args.benchmark:
         queries = get_queries(dataset)
 
         async def _query_task(query: Query) -> Tuple[Query, str]:
-            # NOTE: include the ground truth in the query
+            """Execute a single query with debug output.
+
+            Args:
+                query: Query object containing question and ground truth evidence.
+
+            Returns:
+                Tuple of (query, result_string) with retrieval results.
+            """
+            # Debug: print query and ground truth
             cprint(query, c='blue', new_line=True)
             result = await query_from_vdb(query.question, 10, working_dir)
             return query, result
@@ -373,39 +429,47 @@ if __name__ == "__main__":
             cprint(response)
             json.dump(response, f, indent=4)
 
+    # Phase 3: Compute and report retrieval metrics with debug details
+    # Shows detailed scoring for each query to identify failures and successes
     if args.benchmark or args.score:
         with open(f"./results/vdb/{args.dataset}_{args.n}.json", "r") as f:
             answers = json.load(f)
-        cprint(len(answers))
+        cprint(len(answers))  # Debug: print number of results loaded
 
+        # Load optional multihop subset for detailed analysis
         try:
             with open(f"./questions/{args.dataset}_{args.n}.json", "r") as f:
                 questions_multihop = json.load(f)
-            cprint(len(questions_multihop))
+            cprint(len(questions_multihop))  # Debug: print multihop subset size
         except FileNotFoundError:
             questions_multihop = []
             print("No multihop questions file found")
 
-        # Compute retrieval metrics
+        # Compute retrieval recall with detailed debug output per query
         retrieval_scores: List[float] = []
         retrieval_scores_multihop: List[float] = []
 
         for answer in answers:
             ground_truth = answer["ground_truth"]
             predicted_evidence = answer["evidence"]
+            # Debug: print ground truth and predicted evidence for each query
             cprint(ground_truth)
             cprint(predicted_evidence, new_line=True)
 
+            # Compute recall: fraction of ground truth documents retrieved
             p_retrieved: float = len(set(ground_truth).intersection(set(predicted_evidence))) / len(set(ground_truth))
-            cprint(p_retrieved, c='red')
+            cprint(p_retrieved, c='red')  # Debug: print score in red
             retrieval_scores.append(p_retrieved)
 
+            # Track multihop questions separately
             if answer["question"] in questions_multihop:
                 retrieval_scores_multihop.append(p_retrieved)
 
+        # Report perfect retrieval percentage with colored output
         perfect_retrieval = np.mean([1 if s == 1.0 else 0 for s in retrieval_scores])
         cprint(f"Percentage of queries with perfect retrieval: {perfect_retrieval}", c='red')
-        
+
+        # Report multihop performance separately if available
         if len(retrieval_scores_multihop):
             multihop_perfect_retrieval = np.mean([1 if s == 1.0 else 0 for s in retrieval_scores_multihop])
             cprint(f"[multihop] Percentage of queries with perfect retrieval: {multihop_perfect_retrieval}", c='red')
